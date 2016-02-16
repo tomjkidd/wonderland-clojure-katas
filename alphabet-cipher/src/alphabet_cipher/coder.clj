@@ -6,6 +6,7 @@
             (char)) (range (int \a) (inc (int \z)))))
 
 (defn char-index
+  "Get the 0 based index of a char in the alphabet"
   [ch]
   (-> ch
       (str)      
@@ -25,7 +26,7 @@
     (concat remaining dropped)))
 
 (defn table
-  "The alphabet based table for encode/decode"
+  "The alphabet based table of permutations for encode/decode"
   []
   (loop [acc [] remaining alphabet]
     (let [f (first remaining)
@@ -42,16 +43,19 @@
        (map #(nth %  n))))
 
 (defn encode-letter
+  "Encode a single letter"
   [row-char col-char]
   (-> (table)
        (nth (char-index row-char))
        (nth (char-index col-char))))
 
 (defn match-length
+  "Cycle over a message to create a message of a certain length"
   [n message]
   (take n (cycle message)))
 
 (defn decode-letter
+  "Decode a single letter"
   [key-char enc-char]
   (let [decoded-index (->> (column (char-index key-char))
                            (map-indexed (fn [idx itm] [idx itm]))
@@ -61,21 +65,23 @@
         decoded-char (nth (nth (table) 0) decoded-index)]
     decoded-char))
 
-(defn encode [keyword message]
-  (let [to-take (max (count keyword) (count message))
+(defn match-length-then-apply
+  "Make sure the length of the keyword and message are the same, and then perform an operation mapped over each letter."
+  [keyword other-word map-letter-fn]
+  (let [to-take (max (count keyword) (count other-word))
         k (match-length to-take keyword)
-        m (match-length to-take message)
-        zipper (map vector k m)]
-    (->> (map #(encode-letter (first %) (first (rest %))) zipper)
+        o (match-length to-take other-word)
+        zipper (map vector k o)]
+    (->> (map #(map-letter-fn (first %) (first (rest %))) zipper)
          (reduce str ""))))
 
+(defn encode [keyword message]
+  "Encode a message using a given keyword"
+  (match-length-then-apply keyword message encode-letter))
+
 (defn decode [keyword encoded]
-  (let [to-take (max (count keyword) (count encoded))
-        k (match-length to-take keyword)
-        e (match-length to-take encoded)
-        zipper (map vector k e)]
-    (->> (map #(decode-letter (first %) (first (rest %))) zipper)
-         (reduce str ""))))
+  "Decode a message using a given keyword"
+  (match-length-then-apply keyword encoded decode-letter))
 
 (defn decipher [cipher message]
   "decypherme")
