@@ -65,13 +65,36 @@
         decoded-char (nth (nth (table) 0) decoded-index)]
     decoded-char))
 
+(defn decipher-letter
+  "Deciphers a single letter"
+  [msg-char enc-char]
+  (let [keyword-index (->> (nth (table) (char-index msg-char))
+                           (map-indexed (fn [idx itm] [idx itm]))
+                           (filter #(= (first (rest %)) enc-char))
+                           (first)
+                           (first))
+        keyword-char (nth (nth (table) 0) keyword-index)]
+    keyword-char))
+
+(defn determine-cipher
+  "Determines the cipher from a value that might repeat it multiple times."
+  [possibly-repeating-cipher]
+  (let [len (count possibly-repeating-cipher)]
+    (loop [cur-idx 1]
+      (let [cipher-candidate (subs possibly-repeating-cipher 0 cur-idx)
+            expanded-cipher (apply str (take len (cycle cipher-candidate)))]
+        (if (or (= cur-idx len)
+                (= possibly-repeating-cipher expanded-cipher))
+          cipher-candidate
+          (recur (inc cur-idx)))))))
+
 (defn match-length-then-apply
   "Make sure the length of the keyword and message are the same, and then perform an operation mapped over each letter."
-  [keyword other-word map-letter-fn]
-  (let [to-take (max (count keyword) (count other-word))
-        k (match-length to-take keyword)
-        o (match-length to-take other-word)
-        zipper (map vector k o)]
+  [word1 word2 map-letter-fn]
+  (let [to-take (max (count word1) (count word2))
+        w1 (match-length to-take word1)
+        w2 (match-length to-take word2)
+        zipper (map vector w1 w2)]
     (->> (map #(map-letter-fn (first %) (first (rest %))) zipper)
          (reduce str ""))))
 
@@ -84,5 +107,7 @@
   (match-length-then-apply keyword encoded decode-letter))
 
 (defn decipher [cipher message]
-  "decypherme")
+  "Determines the keyword given an encoded message and the decoded message"
+  (-> (match-length-then-apply message cipher decipher-letter)
+      (determine-cipher)))
 
