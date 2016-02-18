@@ -11,3 +11,8 @@
       (is (hasAllTheSameDigits? wondernum (* 4 wondernum)))
       (is (hasAllTheSameDigits? wondernum (* 5 wondernum)))
       (is (hasAllTheSameDigits? wondernum (* 6 wondernum))))))
+
+(deftest test-day4-wonderland-number
+  (testing "A set of numbers under 1000 whose sum of cubed digits is equal to the number"
+    (let [ns (day4-wonderland-number-finder)]
+      (is (= ns '(0 1 153 370 371 407))))))
