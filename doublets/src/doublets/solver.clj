@@ -31,6 +31,17 @@
        (filter #(= n (second %)))
        (map first)))
 
+(defn choose-best-word
+  [target candidates]
+  (let [tmps (map (fn [wd] {:word wd :diffs (count-diffs wd target)}) candidates)
+        find-best (fn [min cur]
+                   (if (nil? min)
+                     cur
+                     (if (< (:diffs min) (:diffs cur))
+                       min
+                       cur)))]
+    (:word (reduce find-best nil tmps))))
+
 (defn find-doublets
   [word-pool
    source
@@ -41,14 +52,7 @@
       (do
         (let [one-diff (with-n-diffs 1 word-pool cur)
               candidates (filter #(not (contains? (set acc) %)) one-diff)
-              next (first (reduce (fn [min cur]
-                                    (if (nil? min)
-                                      cur
-                                      (if (< (second min) (second cur))
-                                        min
-                                        cur)))
-                                  nil
-                                  (map (fn [wd] [wd (count-diffs wd trg)]) candidates)))]
+              next (choose-best-word trg candidates)]
           (recur (conj acc next) next trg))))))
 
 (defn doublets
