@@ -7,6 +7,11 @@
                (slurp)
                (read-string)))
 
+(def more-words (-> "morewords.edn"
+                    (io/resource)
+                    (slurp)
+                    (read-string)))
+
 (defn same-length?
   [w1 w2]
   (= (count w1) (count w2)))
@@ -54,6 +59,13 @@
               candidates (filter #(not (contains? (set acc) %)) one-diff)
               next (choose-best-word trg candidates)]
           (recur (conj acc next) next trg))))))
+
+(defn for-fun
+  []
+  (let [pairs [["jail" "free"]
+               ["love" "baby"]
+               ["crap" "hope"]]]
+    (map #(find-doublets more-words (first %) (second %)) pairs)))
 
 (defn doublets
   [word1 word2]
