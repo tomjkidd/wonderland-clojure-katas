@@ -14,7 +14,9 @@
            (doublets "bank" "loan")))
 
     (is (= ["wheat" "cheat" "cheap" "cheep" "creep" "creed" "breed" "bread"]
-           (doublets "wheat" "bread"))))
+           (doublets "wheat" "bread")))
+    (is (= ["jail" "fail" "fall" "fell" "feel" "feed" "fled" "flee" "free"]
+           (doublets "jail" "free"))))
 
   (testing "with no word links found"
     (is (= []
