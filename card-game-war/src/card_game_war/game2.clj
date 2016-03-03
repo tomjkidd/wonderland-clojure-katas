@@ -1,4 +1,5 @@
-(ns card-game-war.game2)
+(ns card-game-war.game2
+  (:require [card-game-war.logic.basic :as logic.basic]))
 
 ;; feel free to use these cards or use your own data structure
 (def suits [:spade :club :diamond :heart])
@@ -71,20 +72,31 @@ one-at-a-time into n groups."
   [cards]
   (reduce determine-winner cards))
 
-(defn play-round
+(defn play-round-with-config
   "Play a round of war. piles represents an array of card arrays, 
-representing the hands of each player in the round."
-  [& piles]
-  (let [ante (filter #(not (nil? %)) (map first piles))
-        war-cards ante
+representing the hands of each player in the round.
+
+config is a hash map with the following keys:
+  :ante - A function that takes piles and returns the reward (array of cards)
+    for winning
+
+  :war-cards - A function that takes piles and returns the array of cards
+    that will battle to decide the winner.
+
+  :adjust-piles - A function that takes the starting piles, winning-card, 
+    and ante that returns the new piles that result from the round."
+  [config & piles]
+  (let [ante ((:ante config) piles)
+        war-cards ((:war-cards config) piles)
         winning-card (winner war-cards)
-        adjusted-piles (map (fn [p]
-                              (cond
-                               (nil? (first p)) p
-                               (= (first p) winning-card) (concat (rest p) ante)
-                               :else (rest p)))
-                            piles)]
+        adjusted-piles ((:adjust-piles config) piles winning-card ante)]
     adjusted-piles))
+
+(defn play-round
+  [& piles]
+  (apply play-round-with-config
+         logic.basic/config
+         piles))
 
 (defn play-game
   "Play a game of war. piles represents an array of card arrays,
