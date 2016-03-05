@@ -23,7 +23,7 @@ and the ante (cards to the winner)"
           :else (drop 4 p)))
        piles))
 
-(def config
+(def core
   {:ante ante
    :war-cards war-cards
    :adjust-piles adjust-piles})

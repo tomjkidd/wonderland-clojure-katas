@@ -2,7 +2,10 @@
   (:require [card-game-war.logic.basic :as logic.basic]
             [card-game-war.logic.three-card :as logic.three-card]))
 
-;; feel free to use these cards or use your own data structure
+(def config
+  {:logic logic.basic/core
+   :debug false})
+
 (def suits [:spade :club :diamond :heart])
 (def ranks [2 3 4 5 6 7 8 9 10 :jack :queen :king :ace])
 (def cards
@@ -75,11 +78,11 @@ one-at-a-time into n groups."
     nil
     (reduce determine-winner cards)))
 
-(defn play-round-with-config
+(defn play-round
   "Play a round of war. piles represents an array of card arrays, 
 representing the hands of each player in the round.
 
-config is a hash map with the following keys:
+logic is a hash map with the following keys:
   :ante - A function that takes piles and returns the reward (array of cards)
     for winning
 
@@ -88,52 +91,42 @@ config is a hash map with the following keys:
 
   :adjust-piles - A function that takes the starting piles, winning-card, 
     and ante that returns the new piles that result from the round."
-  [config & piles]
-  (let [ante ((:ante config) piles)
-        war-cards ((:war-cards config) piles)
+  [logic & piles]
+  (let [ante ((:ante logic) piles)
+        war-cards ((:war-cards logic) piles)
         winning-card (winner war-cards)
-        adjusted-piles ((:adjust-piles config) piles winning-card ante)]
+        adjusted-piles ((:adjust-piles logic) piles winning-card ante)]
     adjusted-piles))
 
-(defn play-round
-  [& piles]
-  (apply play-round-with-config
-         logic.three-card/config
-         piles))
-
-(defn play-game
+(defn play-game-helper
   "Play a game of war. piles represents an array of card arrays,
 representing the hands of each player in the game."
-  [& piles]
+  [config & piles]
   (loop [ps piles]
-    (let [debug true
+    (let [debug (get config :debug)
+          logic (get config :logic)
           ps-with-count (map-indexed 
                          (fn [idx itm]
                            {:index idx
                             :item itm
                             :count (count itm)})
                          ps)
-          out (into #{} (->> ps-with-count
-                             (filter #(= 0 (:count %)))
-                             (map #(:index %))))
           ps-with-cards (->> ps-with-count
                                 (filter #(not (= 0 (:count %)))))]
+      (when debug (prn ps))
       (cond
-       (= 1 (- (count ps) (count out)))(keyword (str "player" (+ 1 (:index (first ps-with-cards)))))
-       (every? #(>= 1 (:count %)) ps-with-count) :draw
-       :else (let [new-ps (apply play-round ps)
-                   now-out (->> new-ps
-                                (map-indexed (fn [idx itm]
-                                               {:index idx
-                                                :out? (nil? (first itm))}))
-                                (filter #(:out? %))
-                                (map #(:index %))
-                                (into #{}))]
+       (= 1 (count ps-with-cards))(keyword (str "player" (+ 1 (:index (first ps-with-cards)))))
+       (every? #(= 0 (:count %)) ps-with-count) :draw
+       :else (let [new-ps (apply (partial play-round logic) ps)]
                (if debug
                  (do
-                   (prn new-ps)
+                   (prn "Press enter to move to next move, or type q and then press enter to quit.")
                    (let [in (read-line)]
                      (if (= in "q")
                        :quit
                        (recur new-ps))))
                  (recur new-ps)))))))
+
+(defn play-game
+  [& piles]
+  (apply (partial play-game-helper config) piles))
