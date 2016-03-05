@@ -8,7 +8,9 @@
 (defn war-cards
   "Defines the cards that are used to battle for a given round."
   [piles]
-  (map #(first (drop 3 %)) piles))
+  (->> piles
+       (map #(first (drop 3 %)))
+       (filter #(not (nil? %)))))
 
 (defn adjust-piles
   "Defines the way to modify the piles given the starting piles, winning card 

@@ -1,5 +1,6 @@
 (ns card-game-war.game2
-  (:require [card-game-war.logic.basic :as logic.basic]))
+  (:require [card-game-war.logic.basic :as logic.basic]
+            [card-game-war.logic.three-card :as logic.three-card]))
 
 ;; feel free to use these cards or use your own data structure
 (def suits [:spade :club :diamond :heart])
@@ -70,7 +71,9 @@ one-at-a-time into n groups."
 (defn winner
   "Reduces a set of cards to the winning card."
   [cards]
-  (reduce determine-winner cards))
+  (if (empty? cards)
+    nil
+    (reduce determine-winner cards)))
 
 (defn play-round-with-config
   "Play a round of war. piles represents an array of card arrays, 
@@ -95,7 +98,7 @@ config is a hash map with the following keys:
 (defn play-round
   [& piles]
   (apply play-round-with-config
-         logic.basic/config
+         logic.three-card/config
          piles))
 
 (defn play-game
